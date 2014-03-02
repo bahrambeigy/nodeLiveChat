@@ -12,6 +12,8 @@ Installation:
 npm install -d
 
 Run the program:
-npm app.js
+node app.js
 
 Based on "https://github.com/mmukhin/psitsmike_example_1"
+
+Licence: GPLv3

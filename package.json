@@ -1,6 +1,6 @@
 {
-     "name": "bhnode_chat",
-     "description": "nice example chat application with socket.io",
+     "name": "nodeLiveChat",
+     "description": "nice and usable live chat using nodejs",
      "version": "0.0.1",
      "dependencies": {
         "express": "",
