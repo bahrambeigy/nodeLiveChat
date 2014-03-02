@@ -1,0 +1,206 @@
+<html>
+<head>
+<title>Lets Chat :)</title>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<link href="/bootstrap.min.css" rel="stylesheet">
+
+<style>
+html { height: 100% }
+body{ margin : 0px; height: 100%;}
+[class*="col-"] {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.conversation {
+  overflow-y: scroll; 
+  height: 100%;
+  position: relative;
+  background-color: #eee;
+  background-color: rgba(86,61,124,.15);
+  border: 1px solid #ddd;
+  border: 1px solid rgba(86,61,124,.2);
+}
+
+input.btn-block
+{
+  margin-top: 4px;
+}
+
+#data {
+  margin-top: 4px;
+}
+
+#convConatiner {
+  height: 100%;
+  padding-bottom: 150px;
+}
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/jquery.min.js"></script>
+<script src="/bootstrap.min.js"></script>
+<script>
+  $(window).focus(function() {
+        document.title = 'Lets Chat :)';
+  });
+  
+  // mention users function
+  function setTextBox(text) {
+    var prevVal = $('#data').val();
+    $('#data').val(prevVal+' '+text+', ');
+    $('#data').focus();
+  }
+  
+  // right to left support for persian users 
+  function checkPersian( firstChar ) {
+    if( typeof this.characters == 'undefined' )
+        this.characters = ['ا','ب','پ','ت','س','ج','چ','ح','خ','د','ذ','ر','ز','ژ','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ک','گ','ل','م','ن','و','ه','ی', 'آ'];
+    return this.characters.indexOf( firstChar ) != -1;
+  }
+  function checkInput(){
+    jQuery( this ).css( 'direction', checkPersian( jQuery( this ).val().substr( 0, 1 ) ) ? 'rtl' : 'ltr' );
+  }
+  
+  var socket = io.connect();
+  
+  // add user after prompt ;)
+  function addUser() {
+    socket.emit('adduser', $('#nicknameTextBox').val());
+    $('#nicknameModal').hide();
+    $('#data').focus();
+  }
+
+  // on connection to server, ask for user's name with an anonymous callback
+  socket.on('connect', function(){
+    
+    // bring prompt
+    $('#nicknameModal').show();
+    $('#nicknameTextBox').focus();
+    
+    // when the client hits ENTER on their keyboard
+    $('#nicknameTextBox').keypress(function(e) {
+      if(e.which == 13) {
+        $(this).blur();
+        addUser();
+      }
+    });
+    
+  });
+
+  // listener, whenever the server emits 'updatechat', this updates the chat body
+  socket.on('updatechat', function (username, data) {
+  if(data && username) {
+    
+    // update the chat body using nice animation
+    if(username != "SERVER" && username != "ERROR")
+      $('<b><a href="javascript:void(0);" onclick="setTextBox(&quot;'+username+'&quot;)">'+username+'</a>:</b> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
+    else
+      $('<b>'+username+':</b> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
+    
+    // scroll down the message box
+    document.getElementById("conversation").scrollTop = document.getElementById("conversation").scrollHeight;
+    
+    // change the page title when new message is recieved and is not focused
+    if(username != "SERVER")
+    {
+      if(document.hasFocus())
+	document.title = 'Lets Chat :)';
+      else
+	document.title = 'New Message By: ' + username;
+    }
+    
+  }
+  });
+
+  // listener, whenever the server emits 'updateusers', this updates the username list
+  socket.on('updateusers', function(data) {
+    $('#users').empty();
+    $.each(data, function(key, value) {
+      $('#users').append('<div>' + key + '</div>');
+    });
+  });
+
+  function hideModal() {
+    $('#nicknameModal').hide();
+  }
+  
+  // on load of page
+  $(function(){
+  
+  $('#data').change( checkInput );
+  $('#data').keydown( checkInput );
+  $('#data').keyup( checkInput );
+  
+    // when the client clicks SEND
+    $('#datasend').click( function() {
+      var message = $('#data').val();
+      $('#data').val('');
+      // tell server to execute 'sendchat' and send along one parameter
+      socket.emit('sendchat', message);
+      $('#data').focus();
+    });
+
+    // when the client hits ENTER on their keyboard
+    $('#data').keypress(function(e) {
+      if(e.which == 13) {
+        $(this).blur();
+        $('#datasend').focus().click();
+      }
+    });
+    
+  });
+
+</script>
+</head>
+<body>
+
+<div class="modal modal-backdrop" id="nicknameModal">
+	<div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="hideModal();">×</button>
+          <h4 class="modal-title">Enter a nickname</h4>
+        </div>
+        <div class="modal-body">
+          Welcome, Please Enter a nickname to start chatting ;)
+          <input id="nicknameTextBox" class="form-control" />
+        </div>
+        <div class="modal-footer">
+          <a href="#" data-dismiss="modal" class="btn" onclick="hideModal();">Close</a>
+          <a href="#" class="btn btn-primary" onclick="addUser();">Continue</a>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div id="container" class="container">
+  <div class="row">
+
+    <div class="col-xs-2">
+      <div class="well">
+	<b>Welcome :)</b> <br/>
+      </div>
+      
+    </div>
+    
+    <div class="col-xs-8" id="convConatiner">
+      <div class="well">
+	<div id="conversation" class="conversation"></div>
+	<input id="data" class="form-control" />
+	<input type="button" id="datasend" value="Send (or press Enter)" class="btn btn-lg btn-primary btn-block" />
+      </div>
+    </div> 
+    
+    <div class="col-xs-2">
+      <div class="well">
+	  <b>ONLINE USERS</b>
+	    <div id="users"></div>
+	</div>
+      </div>
+    
+  </div>
+</div>
+</body>
+</html>
