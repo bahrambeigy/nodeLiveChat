@@ -23,6 +23,10 @@ body{ margin : 0px; height: 100%;}
   border: 1px solid rgba(86,61,124,.2);
 }
 
+.textCounter {
+  padding-top: 25px;
+}
+
 input.btn-block
 {
   margin-top: 4px;
@@ -34,8 +38,9 @@ input.btn-block
 
 #convConatiner {
   height: 100%;
-  padding-bottom: 150px;
+  padding-bottom: 180px;
 }
+
 </style>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -59,8 +64,14 @@ input.btn-block
         this.characters = ['ا','ب','پ','ت','س','ج','چ','ح','خ','د','ذ','ر','ز','ژ','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ک','گ','ل','م','ن','و','ه','ی', 'آ'];
     return this.characters.indexOf( firstChar ) != -1;
   }
+  
+  var charLimit = 200;
   function checkInput(){
     jQuery( this ).css( 'direction', checkPersian( jQuery( this ).val().substr( 0, 1 ) ) ? 'rtl' : 'ltr' );
+    
+    // update text counter ;)
+    var currLength = jQuery( this ).val().length;
+    $('#textCounter').html("<b>" + currLength + "</b>/" + charLimit);
   }
   
   var socket = io.connect();
@@ -88,17 +99,17 @@ input.btn-block
     });
     
   });
-
+  
   // listener, whenever the server emits 'updatechat', this updates the chat body
-  socket.on('updatechat', function (username, data) {
+  socket.on('updatechat', function (usercolor, username, data) {
   if(data && username) {
     
     // update the chat body using nice animation
     if(username != "SERVER" && username != "ERROR")
-      $('<b><a href="javascript:void(0);" onclick="setTextBox(&quot;'+username+'&quot;)">'+username+'</a>:</b> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
+      $('<b><a style="color: '+usercolor+'" href="javascript:void(0);" onclick="setTextBox(&quot;'+username+'&quot;)">'+username+'</a>:</b> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
     else
-      $('<b>'+username+':</b> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
-    
+      $('<span style="color: '+usercolor+'"><b>'+username+':</b></span> ' + data + '<br>').hide().appendTo($('#conversation')).show('normal');
+
     // scroll down the message box
     document.getElementById("conversation").scrollTop = document.getElementById("conversation").scrollHeight;
     
@@ -188,7 +199,18 @@ input.btn-block
     <div class="col-xs-8" id="convConatiner">
       <div class="well">
 	<div id="conversation" class="conversation"></div>
-	<input id="data" class="form-control" />
+	
+	<div class="row">
+	  
+	  <div class="col-xs-11">
+	    <input id="data" class="form-control" />
+	  </div>
+	  
+	  <div class="textCounter" id="textCounter">
+	  </div>
+	  
+	</div>
+ 
 	<input type="button" id="datasend" value="Send (or press Enter)" class="btn btn-lg btn-primary btn-block" />
       </div>
     </div> 
