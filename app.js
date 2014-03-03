@@ -69,7 +69,7 @@ io.sockets.on('connection', function (socket) {
 	    // assign a color this user :)
 	    socket.usercolor = getRandomColor();
 	    // add the client's username to the global list
-	    usernames[username] = username;
+	    usernames[username] = socket.usercolor;
 	    // echo to client they've connected
 	    socket.emit('updatechat', RED_COLOR_HEX, 'SERVER', 'you have connected. Start chatting ;)');
 	    // echo globally (all clients) that a person has connected
